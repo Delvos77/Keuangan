@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KeuanganKu - Offline App</title>
+    <title>KeuanganKu - Realtime Cloud Sync</title>
 
-    <!-- Web App Manifest (PWA Supporter) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="KeuanganKu">
@@ -17,21 +16,10 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
@@ -47,27 +35,19 @@
                         </div>
                         <div>
                             <h1 class="text-xl font-bold tracking-tight">KeuanganKu</h1>
-                            <p class="text-[11px] text-indigo-200">Aplikasi Keuangan Local-First (Offline)</p>
+                            <p class="text-[11px] text-indigo-200">Cloud Realtime Sync & Offline Mode</p>
                         </div>
                     </div>
 
-                    <!-- Status Offline Badge -->
-                    <span id="offlineStatus" class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2 py-0.5 rounded-full">
-                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Offline Ready
+                    <!-- Status Sinkronisasi -->
+                    <span id="syncStatus" class="inline-flex items-center gap-1.5 text-[10px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2.5 py-1 rounded-full font-medium">
+                        <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-ping"></span> Menghubungkan...
                     </span>
                 </div>
                 
-                <!-- Action Tools -->
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs">
                     <button onclick="exportData()" class="px-3 py-1.5 font-medium bg-indigo-500 hover:bg-indigo-400 rounded-lg flex items-center gap-1.5 transition">
                         <i data-lucide="download" class="w-4 h-4"></i> Ekspor
-                    </button>
-                    <label class="px-3 py-1.5 font-medium bg-indigo-500 hover:bg-indigo-400 rounded-lg flex items-center gap-1.5 cursor-pointer transition">
-                        <i data-lucide="upload" class="w-4 h-4"></i> Impor
-                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
-                    </label>
-                    <button onclick="clearData()" class="p-1.5 text-indigo-200 hover:text-red-300 hover:bg-indigo-500 rounded-lg transition" title="Hapus Semua Data">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
@@ -103,8 +83,6 @@
 
     <!-- Konten Utama -->
     <main class="max-w-6xl mx-auto px-4 py-6 sm:px-6 flex-grow w-full">
-        
-        <!-- Tab Navigasi Kelompok Utama -->
         <div class="flex border-b border-slate-200 mb-6 bg-white rounded-xl p-1.5 shadow-sm border">
             <button id="tabBtnIncome" onclick="switchMainTab('pemasukan')" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="trending-up" class="w-4 h-4"></i> PEMASUKAN
@@ -115,8 +93,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Panel Form Input Transaksi -->
             <div class="lg:col-span-4">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sticky top-24">
                     <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -133,7 +109,6 @@
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Kategori / Bagian</label>
                             <select id="txCategory" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <!-- Options rendered via JS -->
                             </select>
                         </div>
 
@@ -143,19 +118,16 @@
                         </div>
 
                         <button type="submit" id="submitBtn" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i> Simpan Transaksi
+                            <i data-lucide="cloud-upload" class="w-4 h-4"></i> Simpan Transaksi
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Panel Rekapitulasi Subtotal & Daftar Transaksi -->
             <div class="lg:col-span-8 space-y-6">
-                
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Rekapitulasi Kategori</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="subtotalCards">
-                        <!-- Subtotal Cards rendered via JS -->
                     </div>
                 </div>
 
@@ -185,46 +157,59 @@
                                 </tr>
                             </thead>
                             <tbody id="txTableBody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Transaction rows rendered via JS -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
 
     <footer class="bg-white border-t border-slate-200 mt-12 py-4 text-center text-xs text-slate-500">
-        KeuanganKu &copy; 2026 — Offline & Mobile-Optimized.
+        KeuanganKu &copy; 2026 — Realtime Cloud Database Connected.
     </footer>
 
-    <!-- LOGIKA JAVASCRIPT & SERVICE WORKER FOR OFFLINE -->
-    <script>
-        // --- OFFLINE SERVICE WORKER REGISTRATION ---
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'keuanganku-v1';
-                self.addEventListener('install', (e) => {
-                    e.waitUntil(
-                        caches.open(CACHE_NAME).then((cache) => {
-                            return cache.addAll(['./']);
-                        })
-                    );
-                });
-                self.addEventListener('fetch', (e) => {
-                    e.respondWith(
-                        caches.match(e.request).then((res) => res || fetch(e.request))
-                    );
-                });
-            `;
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            navigator.serviceWorker.register(URL.createObjectURL(blob))
-                .then(() => console.log('Service Worker Registered Successfully for Offline Capability.'))
-                .catch(err => console.log('SW Fail:', err));
-        }
+    <!-- FIREBASE SDKs (MODULES) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            deleteDoc, 
+            doc, 
+            onSnapshot, 
+            query, 
+            orderBy,
+            enableIndexedDbPersistence 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- KONFIGURASI KATEGORI ---
+        // =========================================================
+        // TEMPELKAN KONFIGURASI FIREBASE KAMU DI SINI
+        // =========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQtFO6EjkAKy9jZIg-q8a_SfPx4EN3Jes",
+            authDomain: "keuanganku-9c66a.firebaseapp.com",
+            projectId: "keuanganku-9c66a",
+            storageBucket: "keuanganku-9c66a.firebasestorage.app",
+            messagingSenderId: "692549773746",
+            appId: "1:692549773746:web:33dbcb6faa019ed4011cab"
+};
+        };
+
+        // Initialize Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Offline Persistence Support
+        enableIndexedDbPersistence(db).catch((err) => {
+            console.log("Persistence Error: ", err.code);
+        });
+
+        // App State
+        let currentGroup = 'pemasukan';
+        let transactions = [];
+
         const CATEGORIES = {
             pemasukan: [
                 { id: 'IN_GAJI', name: 'Gaji', desc: 'Pemasukan dari Gaji Utama' },
@@ -237,51 +222,29 @@
             ]
         };
 
-        let currentGroup = 'pemasukan';
-        let transactions = [];
+        // Listen to Realtime Database
+        const q = query(collection(db, "transactions"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            transactions = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFromLocalStorage();
-            switchMainTab('pemasukan');
-            lucide.createIcons();
+            // Update Sync Status Badge
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.className = "inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2.5 py-1 rounded-full font-medium";
+            syncStatus.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Terhubung (Cloud Sync)`;
+
+            updateUI();
+        }, (error) => {
+            console.error("Firebase Sync Error: ", error);
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.className = "inline-flex items-center gap-1.5 text-[10px] bg-rose-500/20 text-rose-200 border border-rose-400/30 px-2.5 py-1 rounded-full font-medium";
+            syncStatus.innerHTML = `<span class="w-1.5 h-1.5 bg-rose-400 rounded-full"></span> Terputus (Mode Offline)`;
         });
 
-        function formatCurrencyInput(input) {
-            let value = input.value.replace(/\D/g, '');
-            if (value === '') {
-                input.value = '';
-                return;
-            }
-            input.value = new Intl.NumberFormat('id-ID').format(value);
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('keuangan_db_v5', JSON.stringify(transactions));
-            updateUI();
-        }
-
-        function loadFromLocalStorage() {
-            const data = localStorage.getItem('keuangan_db_v5');
-            if (data) {
-                try {
-                    transactions = JSON.parse(data);
-                } catch (e) {
-                    transactions = [];
-                }
-            } else {
-                const today = new Date().toISOString().split('T')[0];
-                transactions = [
-                    { id: '1', date: today, time: '09:00', type: 'pemasukan', categoryId: 'IN_GAJI', amount: 5000000, note: 'Gaji Bulanan' },
-                    { id: '2', date: today, time: '11:30', type: 'pemasukan', categoryId: 'IN_PRINTING', amount: 800000, note: 'Order Cetak Stiker & Spanduk' },
-                    { id: '3', date: today, time: '14:15', type: 'pemasukan', categoryId: 'IN_DESIGN', amount: 1200000, note: 'Project Desain Feed & Brand Logo' },
-                    { id: '4', date: today, time: '16:45', type: 'pengeluaran', categoryId: 'EX_POKOK', amount: 350000, note: 'Belanja Sembako & Harian' },
-                    { id: '5', date: today, time: '18:20', type: 'pengeluaran', categoryId: 'EX_MODAL_PRINTING', amount: 450000, note: 'Beli Tinta Printer & Kertas Art Paper' }
-                ];
-                saveToLocalStorage();
-            }
-        }
-
-        function switchMainTab(group) {
+        // Global functions attachment
+        window.switchMainTab = function(group) {
             currentGroup = group;
             const tabIncome = document.getElementById('tabBtnIncome');
             const tabExpense = document.getElementById('tabBtnExpense');
@@ -302,26 +265,17 @@
 
             populateCategoryDropdowns();
             updateUI();
-        }
+        };
 
-        function populateCategoryDropdowns() {
-            const formSelect = document.getElementById('txCategory');
-            const filterSelect = document.getElementById('filterCategory');
-            const cats = CATEGORIES[currentGroup];
+        window.formatCurrencyInput = function(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value === '') { input.value = ''; return; }
+            input.value = new Intl.NumberFormat('id-ID').format(value);
+        };
 
-            formSelect.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            filterSelect.innerHTML = `<option value="ALL">Semua Kategori</option>` + 
-                cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        }
-
-        function formatRupiah(amount) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
-        }
-
-        function addTransaction(e) {
+        window.addTransaction = async function(e) {
             e.preventDefault();
 
-            // Tangkap Tanggal & Jam Otomatis
             const now = new Date();
             const date = now.toISOString().split('T')[0];
             const hours = String(now.getHours()).padStart(2, '0');
@@ -338,28 +292,46 @@
                 return;
             }
 
-            const newTx = {
-                id: Date.now().toString(),
-                date,
-                time,
-                type: currentGroup,
-                categoryId,
-                amount,
-                note
-            };
+            try {
+                await addDoc(collection(db, "transactions"), {
+                    date,
+                    time,
+                    timestamp: now.getTime(),
+                    type: currentGroup,
+                    categoryId,
+                    amount,
+                    note
+                });
 
-            transactions.unshift(newTx);
-            saveToLocalStorage();
+                document.getElementById('txAmount').value = '';
+                document.getElementById('txNote').value = '';
+            } catch (err) {
+                alert('Gagal menyimpan transaksi: ' + err.message);
+            }
+        };
 
-            document.getElementById('txAmount').value = '';
-            document.getElementById('txNote').value = '';
+        window.deleteTransaction = async function(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Data di perangkat lain juga akan terhapus.')) {
+                try {
+                    await deleteDoc(doc(db, "transactions", id));
+                } catch (err) {
+                    alert('Gagal menghapus: ' + err.message);
+                }
+            }
+        };
+
+        function populateCategoryDropdowns() {
+            const formSelect = document.getElementById('txCategory');
+            const filterSelect = document.getElementById('filterCategory');
+            const cats = CATEGORIES[currentGroup];
+
+            formSelect.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            filterSelect.innerHTML = `<option value="ALL">Semua Kategori</option>` + 
+                cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
         }
 
-        function deleteTransaction(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-                transactions = transactions.filter(t => t.id !== id);
-                saveToLocalStorage();
-            }
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
         }
 
         function updateUI() {
@@ -370,14 +342,8 @@
         }
 
         function renderHeaderSummary() {
-            const totalIncome = transactions
-                .filter(t => t.type === 'pemasukan')
-                .reduce((sum, t) => sum + t.amount, 0);
-
-            const totalExpense = transactions
-                .filter(t => t.type === 'pengeluaran')
-                .reduce((sum, t) => sum + t.amount, 0);
-
+            const totalIncome = transactions.filter(t => t.type === 'pemasukan').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'pengeluaran').reduce((sum, t) => sum + t.amount, 0);
             const netBalance = totalIncome - totalExpense;
 
             document.getElementById('grandIncome').innerText = formatRupiah(totalIncome);
@@ -419,7 +385,7 @@
             }).join('');
         }
 
-        function renderTransactions() {
+        window.renderTransactions = function() {
             const tbody = document.getElementById('txTableBody');
             const filterCat = document.getElementById('filterCategory').value;
 
@@ -447,14 +413,13 @@
                 const isIncome = t.type === 'pemasukan';
                 const amountClass = isIncome ? 'text-emerald-600 font-semibold' : 'text-rose-600 font-semibold';
                 const sign = isIncome ? '+' : '-';
-                const displayTime = t.time ? t.time : '--:--';
 
                 return `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="py-3 px-3 text-xs text-slate-500 whitespace-nowrap">
                             <div class="font-medium text-slate-700">${t.date}</div>
                             <div class="text-[10px] text-indigo-600 font-semibold flex items-center gap-1 mt-0.5">
-                                <i data-lucide="clock" class="w-3 h-3"></i> ${displayTime} WIB
+                                <i data-lucide="clock" class="w-3 h-3"></i> ${t.time || '--:--'} WIB
                             </div>
                         </td>
                         <td class="py-3 px-3 text-xs text-slate-700 font-medium">
@@ -476,11 +441,11 @@
             }).join('');
 
             lucide.createIcons();
-        }
+        };
 
-        function exportData() {
+        window.exportData = function() {
             if (transactions.length === 0) {
-                alert('Tidak ada data transaksi untuk diekspor.');
+                alert('Tidak ada data transaksi.');
                 return;
             }
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
@@ -490,38 +455,10 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-        }
+        };
 
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        if (confirm(`Impor ${importedData.length} data transaksi? Data lama akan digantikan.`)) {
-                            transactions = importedData;
-                            saveToLocalStorage();
-                            alert('Data berhasil diimpor!');
-                        }
-                    } else {
-                        alert('Format file JSON tidak valid.');
-                    }
-                } catch (err) {
-                    alert('Gagal membaca file backup JSON.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function clearData() {
-            if (confirm('APAKAH ANDA YAKIN? Seluruh data transaksi di penyimpanan lokal akan dihapus permanen.')) {
-                transactions = [];
-                saveToLocalStorage();
-            }
-        }
+        // Initial setup
+        switchMainTab('pemasukan');
     </script>
 </body>
 </html>
