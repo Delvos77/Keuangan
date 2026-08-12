@@ -45,7 +45,7 @@
                         <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-ping"></span> Menghubungkan...
                     </span>
                 </div>
-                
+
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs">
                     <button onclick="exportData()" class="px-3 py-1.5 font-medium bg-indigo-500 hover:bg-indigo-400 rounded-lg flex items-center gap-1.5 transition">
                         <i data-lucide="download" class="w-4 h-4"></i> Ekspor
@@ -73,7 +73,7 @@
 
                 <div class="bg-white/20 backdrop-blur-md rounded-xl p-3.5 border border-white/20">
                     <div class="flex items-center justify-between text-indigo-100 text-xs font-medium mb-1">
-                        <span>Sisa Saldo (Net Balance)</span>
+                        <span>Total Saldo Konsolidasi</span>
                         <i data-lucide="scale" class="w-4 h-4 text-amber-300"></i>
                     </div>
                     <div class="text-xl font-bold text-white" id="netBalance">Rp 0</div>
@@ -84,6 +84,17 @@
 
     <!-- Konten Utama -->
     <main class="max-w-6xl mx-auto px-4 py-6 sm:px-6 flex-grow w-full">
+        
+        <!-- Section Rincian Multi-Dompet -->
+        <div class="mb-6">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                <i data-lucide="credit-card" class="w-4 h-4 text-indigo-600"></i> Saldo Per Dompet / Rekening
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" id="walletCards">
+                <!-- Diisi via JavaScript -->
+            </div>
+        </div>
+
         <div class="flex border-b border-slate-200 mb-6 bg-white rounded-xl p-1.5 shadow-sm border">
             <button id="tabBtnIncome" onclick="switchMainTab('pemasukan')" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="trending-up" class="w-4 h-4"></i> PEMASUKAN
@@ -94,6 +105,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Form Input Transaksi -->
             <div class="lg:col-span-4">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sticky top-24">
                     <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -102,6 +114,13 @@
                     </h2>
 
                     <form id="transactionForm" onsubmit="addTransaction(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Pilih Dompet / Sumber Dana</label>
+                            <select id="txWallet" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <!-- Diisi via JavaScript -->
+                            </select>
+                        </div>
+
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Nominal (Rp)</label>
                             <input type="text" id="txAmount" placeholder="Contoh: 500.000" required oninput="formatCurrencyInput(this)" inputmode="numeric" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -125,6 +144,7 @@
                 </div>
             </div>
 
+            <!-- Dashboard Rekap & Tabel Transaksi -->
             <div class="lg:col-span-8 space-y-6">
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Rekapitulasi Kategori</h3>
@@ -138,8 +158,12 @@
                             <i data-lucide="list" class="w-5 h-5 text-indigo-600"></i>
                             Daftar Transaksi
                         </h3>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-500 font-medium">Filter:</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Filter Dompet -->
+                            <select id="filterWallet" onchange="renderTransactions()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                                <option value="ALL">Semua Dompet</option>
+                            </select>
+                            <!-- Filter Kategori -->
                             <select id="filterCategory" onchange="renderTransactions()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
                                 <option value="ALL">Semua Kategori</option>
                             </select>
@@ -151,6 +175,7 @@
                             <thead>
                                 <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                     <th class="py-2.5 px-3">Waktu & Tanggal</th>
+                                    <th class="py-2.5 px-3">Dompet</th>
                                     <th class="py-2.5 px-3">Kategori</th>
                                     <th class="py-2.5 px-3">Keterangan</th>
                                     <th class="py-2.5 px-3 text-right">Nominal</th>
@@ -185,9 +210,7 @@
             enableIndexedDbPersistence 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // =========================================================
-        // TEMPELKAN KONFIGURASI FIREBASE KAMU DI SINI
-        // =========================================================
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBQtFO6EjkAKy9jZIg-q8a_SfPx4EN3Jes",
             authDomain: "keuanganku-9c66a.firebaseapp.com",
@@ -197,16 +220,23 @@
             appId: "1:692549773746:web:33dbcb6faa019ed4011cab"
         };
 
-        // Initialize Firebase & Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Offline Persistence Support
         enableIndexedDbPersistence(db).catch((err) => {
             console.log("Persistence Error: ", err.code);
         });
 
-        // App State
+        // Master Data Dompet
+        const WALLETS = [
+            { id: 'W_CASH', name: 'Cash / Tunai', icon: 'banknote' },
+            { id: 'W_BCA', name: 'Bank BCA', icon: 'building-2' },
+            { id: 'W_MANDIRI', name: 'Bank Mandiri', icon: 'building' },
+            { id: 'W_GOPAY', name: 'GoPay', icon: 'smartphone' },
+            { id: 'W_OVO', name: 'OVO', icon: 'wallet' },
+            { id: 'W_SHOPEEPAY', name: 'ShopeePay', icon: 'shopping-bag' }
+        ];
+
         let currentGroup = 'pemasukan';
         let transactions = [];
 
@@ -222,7 +252,7 @@
             ]
         };
 
-        // Listen to Realtime Database
+        // Realtime Listener
         const q = query(collection(db, "transactions"), orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
             transactions = snapshot.docs.map(doc => ({
@@ -230,7 +260,6 @@
                 ...doc.data()
             }));
 
-            // Update Sync Status Badge
             const syncStatus = document.getElementById('syncStatus');
             syncStatus.className = "inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2.5 py-1 rounded-full font-medium";
             syncStatus.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Terhubung (Cloud Sync)`;
@@ -243,7 +272,7 @@
             syncStatus.innerHTML = `<span class="w-1.5 h-1.5 bg-rose-400 rounded-full"></span> Terputus (Mode Offline)`;
         });
 
-        // Global functions attachment
+        // Global functions
         window.switchMainTab = function(group) {
             currentGroup = group;
             const tabIncome = document.getElementById('tabBtnIncome');
@@ -282,12 +311,13 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const time = `${hours}:${minutes}`;
 
+            const walletId = document.getElementById('txWallet').value;
             const rawAmount = document.getElementById('txAmount').value;
             const amount = parseFloat(rawAmount.replace(/\./g, ''));
             const categoryId = document.getElementById('txCategory').value;
             const note = document.getElementById('txNote').value;
 
-            if (isNaN(amount) || amount <= 0 || !note) {
+            if (isNaN(amount) || amount <= 0 || !note || !walletId) {
                 alert('Mohon isi seluruh data transaksi dengan benar.');
                 return;
             }
@@ -298,6 +328,7 @@
                     time,
                     timestamp: now.getTime(),
                     type: currentGroup,
+                    walletId,
                     categoryId,
                     amount,
                     note
@@ -323,11 +354,17 @@
         function populateCategoryDropdowns() {
             const formSelect = document.getElementById('txCategory');
             const filterSelect = document.getElementById('filterCategory');
+            const walletFormSelect = document.getElementById('txWallet');
+            const walletFilterSelect = document.getElementById('filterWallet');
             const cats = CATEGORIES[currentGroup];
 
             formSelect.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             filterSelect.innerHTML = `<option value="ALL">Semua Kategori</option>` + 
                 cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            walletFormSelect.innerHTML = WALLETS.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+            walletFilterSelect.innerHTML = `<option value="ALL">Semua Dompet</option>` + 
+                WALLETS.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
         }
 
         function formatRupiah(amount) {
@@ -335,10 +372,33 @@
         }
 
         function updateUI() {
+            renderWalletCards();
             renderHeaderSummary();
             renderSubtotals();
             renderTransactions();
             lucide.createIcons();
+        }
+
+        function renderWalletCards() {
+            const container = document.getElementById('walletCards');
+            
+            container.innerHTML = WALLETS.map(w => {
+                const income = transactions.filter(t => t.walletId === w.id && t.type === 'pemasukan').reduce((sum, t) => sum + t.amount, 0);
+                const expense = transactions.filter(t => t.walletId === w.id && t.type === 'pengeluaran').reduce((sum, t) => sum + t.amount, 0);
+                const balance = income - expense;
+
+                const balanceColor = balance < 0 ? 'text-rose-600' : 'text-slate-800';
+
+                return `
+                    <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="${w.icon}" class="w-4 h-4 text-indigo-600"></i>
+                            <span class="text-xs font-semibold text-slate-700 truncate">${w.name}</span>
+                        </div>
+                        <div class="text-xs font-bold ${balanceColor}">${formatRupiah(balance)}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderHeaderSummary() {
@@ -388,17 +448,23 @@
         window.renderTransactions = function() {
             const tbody = document.getElementById('txTableBody');
             const filterCat = document.getElementById('filterCategory').value;
+            const filterW = document.getElementById('filterWallet').value;
 
             let filtered = transactions.filter(t => t.type === currentGroup);
+            
             if (filterCat !== 'ALL') {
                 filtered = filtered.filter(t => t.categoryId === filterCat);
+            }
+
+            if (filterW !== 'ALL') {
+                filtered = filtered.filter(t => t.walletId === filterW);
             }
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
-                            Belum ada transaksi recorded untuk kategori ini.
+                        <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                            Belum ada transaksi recorded untuk kriteria ini.
                         </td>
                     </tr>
                 `;
@@ -409,7 +475,9 @@
 
             tbody.innerHTML = filtered.map(t => {
                 const catObj = allCategories.find(c => c.id === t.categoryId);
+                const walletObj = WALLETS.find(w => w.id === t.walletId);
                 const catName = catObj ? catObj.name : 'Lainnya';
+                const walletName = walletObj ? walletObj.name : 'Cash';
                 const isIncome = t.type === 'pemasukan';
                 const amountClass = isIncome ? 'text-emerald-600 font-semibold' : 'text-rose-600 font-semibold';
                 const sign = isIncome ? '+' : '-';
@@ -421,6 +489,11 @@
                             <div class="text-[10px] text-indigo-600 font-semibold flex items-center gap-1 mt-0.5">
                                 <i data-lucide="clock" class="w-3 h-3"></i> ${t.time || '--:--'} WIB
                             </div>
+                        </td>
+                        <td class="py-3 px-3 text-xs text-slate-700 font-medium whitespace-nowrap">
+                            <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-[11px] border border-indigo-100">
+                                ${walletName}
+                            </span>
                         </td>
                         <td class="py-3 px-3 text-xs text-slate-700 font-medium">
                             <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[11px]">
