@@ -105,15 +105,20 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Form Input Transaksi -->
+            <!-- Form Input / Edit Transaksi -->
             <div class="lg:col-span-4">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sticky top-24">
-                    <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-600"></i>
-                        Tambah <span id="formTypeTitle">Pemasukan</span>
-                    </h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-600" id="formIcon"></i>
+                            <span id="formActionTitle">Tambah</span> <span id="formTypeTitle">Pemasukan</span>
+                        </h2>
+                        <button id="cancelEditBtn" onclick="resetForm()" class="hidden text-xs text-rose-600 hover:underline font-medium">Batal Edit</button>
+                    </div>
 
-                    <form id="transactionForm" onsubmit="addTransaction(event)" class="space-y-4">
+                    <form id="transactionForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <input type="hidden" id="editTxId" value="">
+
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Pilih Dompet / Sumber Dana</label>
                             <select id="txWallet" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -202,6 +207,7 @@
             getFirestore, 
             collection, 
             addDoc, 
+            updateDoc,
             deleteDoc, 
             doc, 
             onSnapshot, 
@@ -302,15 +308,10 @@
             input.value = new Intl.NumberFormat('id-ID').format(value);
         };
 
-        window.addTransaction = async function(e) {
+        window.handleFormSubmit = async function(e) {
             e.preventDefault();
 
-            const now = new Date();
-            const date = now.toISOString().split('T')[0];
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const time = `${hours}:${minutes}`;
-
+            const editId = document.getElementById('editTxId').value;
             const walletId = document.getElementById('txWallet').value;
             const rawAmount = document.getElementById('txAmount').value;
             const amount = parseFloat(rawAmount.replace(/\./g, ''));
@@ -323,28 +324,88 @@
             }
 
             try {
-                await addDoc(collection(db, "transactions"), {
-                    date,
-                    time,
-                    timestamp: now.getTime(),
-                    type: currentGroup,
-                    walletId,
-                    categoryId,
-                    amount,
-                    note
-                });
+                if (editId) {
+                    // Proses Update / Edit Data
+                    await updateDoc(doc(db, "transactions", editId), {
+                        walletId,
+                        categoryId,
+                        amount,
+                        note,
+                        type: currentGroup
+                    });
+                    alert('Transaksi berhasil diperbarui!');
+                    resetForm();
+                } else {
+                    // Proses Tambah Data Baru
+                    const now = new Date();
+                    const date = now.toISOString().split('T')[0];
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const time = `${hours}:${minutes}`;
 
-                document.getElementById('txAmount').value = '';
-                document.getElementById('txNote').value = '';
+                    await addDoc(collection(db, "transactions"), {
+                        date,
+                        time,
+                        timestamp: now.getTime(),
+                        type: currentGroup,
+                        walletId,
+                        categoryId,
+                        amount,
+                        note
+                    });
+
+                    document.getElementById('txAmount').value = '';
+                    document.getElementById('txNote').value = '';
+                }
             } catch (err) {
                 alert('Gagal menyimpan transaksi: ' + err.message);
             }
+        };
+
+        window.editTransaction = function(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+
+            // Pindah tab otomatis jika kategori transaksi berada di grup berbeda
+            if (tx.type !== currentGroup) {
+                switchMainTab(tx.type);
+            }
+
+            document.getElementById('editTxId').value = tx.id;
+            document.getElementById('txWallet').value = tx.walletId || 'W_CASH';
+            document.getElementById('txAmount').value = new Intl.NumberFormat('id-ID').format(tx.amount);
+            document.getElementById('txCategory').value = tx.categoryId;
+            document.getElementById('txNote').value = tx.note;
+
+            document.getElementById('formActionTitle').innerText = "Edit";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            document.getElementById('submitBtn').innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Perbarui Transaksi`;
+            
+            // Scroll ke form di mobile
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            lucide.createIcons();
+        };
+
+        window.resetForm = function() {
+            document.getElementById('editTxId').value = '';
+            document.getElementById('transactionForm').reset();
+            document.getElementById('formActionTitle').innerText = "Tambah";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            
+            const btnColor = currentGroup === 'pemasukan' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700';
+            document.getElementById('submitBtn').className = `w-full py-2.5 px-4 ${btnColor} text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2`;
+            document.getElementById('submitBtn').innerHTML = `<i data-lucide="cloud-upload" class="w-4 h-4"></i> Simpan Transaksi`;
+            populateCategoryDropdowns();
+            lucide.createIcons();
         };
 
         window.deleteTransaction = async function(id) {
             if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Data di perangkat lain juga akan terhapus.')) {
                 try {
                     await deleteDoc(doc(db, "transactions", id));
+                    if (document.getElementById('editTxId').value === id) {
+                        resetForm();
+                    }
                 } catch (err) {
                     alert('Gagal menghapus: ' + err.message);
                 }
@@ -505,9 +566,14 @@
                             ${sign} ${formatRupiah(t.amount)}
                         </td>
                         <td class="py-3 px-3 text-center whitespace-nowrap">
-                            <button onclick="deleteTransaction('${t.id}')" class="p-1 text-slate-400 hover:text-rose-600 rounded transition" title="Hapus">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="editTransaction('${t.id}')" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition" title="Edit">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteTransaction('${t.id}')" class="p-1 text-slate-400 hover:text-rose-600 rounded transition" title="Hapus">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
